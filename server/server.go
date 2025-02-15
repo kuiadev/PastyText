@@ -1,0 +1,208 @@
+package server
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"sync"
+	"time"
+
+	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
+	"github.com/kuiadev/pastytext/data"
+)
+
+// The subprotocol is a string that identifies the protocol that the server and client will use to communicate.
+const subprotocol = "pastytextProtocol"
+
+// ptServer is a struct that implements the http.Handler interface.
+type ptServer struct {
+	clients  map[*client]struct{}
+	serveMux http.ServeMux
+	dbm      *data.Manager
+}
+
+type client struct {
+	message      clientMessage
+	conn         *websocket.Conn
+	clientMutext sync.Mutex
+}
+
+type clientMessage struct {
+	User   string `json:"user"`
+	Action string `json:"action"`
+	Text   string `json:"text"`
+}
+
+type chanData struct {
+	content interface{}
+	err     error
+}
+
+func NewPtServer() (*ptServer, error) {
+	dbm, err := data.NewManager()
+	if err != nil {
+		log.Fatalf("Failed to create data manager: %v\n", err)
+		return nil, err
+	}
+	return &ptServer{
+		clients: make(map[*client]struct{}),
+		dbm:     dbm,
+	}, nil
+}
+
+func (p *ptServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+		InsecureSkipVerify: true, //TODO: This is insecure, but it's just an example
+		Subprotocols:       []string{subprotocol},
+	})
+	if err != nil {
+		log.Printf("%v\n", err)
+		return
+	}
+
+	defer conn.CloseNow()
+
+	if conn.Subprotocol() != subprotocol {
+		conn.Close(websocket.StatusPolicyViolation, fmt.Sprintf("Expected subprotocol %s, but got %s\n", subprotocol, conn.Subprotocol()))
+		return
+	}
+
+	c := &client{
+		conn:    conn,
+		message: clientMessage{},
+	}
+	p.clients[c] = struct{}{}
+
+	p.joinClient(c)
+}
+
+// joinClient is a method that will be called when a new client connects to the server.
+// c is a pointer to a client struct.
+func (p *ptServer) joinClient(c *client) {
+	sendErrMsgChan := make(chan error)
+	defer close(sendErrMsgChan)
+
+	//Send initial message to client
+	go func() {
+		pastes, err := p.dbm.GetPastes()
+		if err != nil {
+			sendErrMsgChan <- err
+		} else {
+			err := c.sendMessageToClient(pastes)
+			sendErrMsgChan <- err
+		}
+
+	}()
+
+	select {
+	case emsg := <-sendErrMsgChan:
+		if emsg != nil {
+			log.Printf("error sending initial message to client: %v\n", emsg)
+			c.conn.CloseNow()
+			delete(p.clients, c)
+		}
+	}
+
+	//Read messages from client
+	for {
+		readMsgChan := make(chan chanData)
+		defer close(readMsgChan)
+		go c.readMessageFromClient(readMsgChan)
+
+		var newClientMessage = clientMessage{}
+		select {
+		case chanResult := <-readMsgChan:
+			if chanResult.err != nil {
+				if chanResult.err != context.DeadlineExceeded {
+					log.Printf("error reading message from client: %v\n", chanResult.err)
+					c.conn.CloseNow()
+					delete(p.clients, c)
+					return
+				} else {
+					continue
+				}
+			}
+			newClientMessage = chanResult.content.(clientMessage)
+		}
+
+		p.persistMessageFromClient(newClientMessage)
+
+		pastes, err := p.dbm.GetPastes()
+		if err == nil {
+			p.publishMessageToClients(pastes)
+		}
+	}
+}
+
+// persistMessageFromClient is a method that saves the message sent by the client to the database.
+func (p *ptServer) persistMessageFromClient(msg clientMessage) {
+	paste := data.Paste{
+		User:      msg.User,
+		Device:    "device",
+		Content:   msg.Text,
+		CreatedAt: time.Now(),
+	}
+	_, err := p.dbm.InsertPaste(paste)
+	if err != nil {
+		log.Printf("error inserting paste: %v\n", err)
+	}
+}
+
+// publishMessageToClients is a method that sends a message to all clients.
+func (p *ptServer) publishMessageToClients(pastes []data.Paste) {
+	//TODO: message will come from database
+
+	var wg sync.WaitGroup
+
+	for c := range p.clients {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			c.sendMessageToClient(pastes)
+		}()
+	}
+
+	wg.Wait()
+	log.Println("Message sent to all clients")
+}
+
+// readMessageFromClient is a method that reads messages from the client.
+// msgChan is a channel that will receive the message.
+func (c *client) readMessageFromClient(msgChan chan<- chanData) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	defer cancel()
+
+	var message clientMessage
+
+	err := wsjson.Read(ctx, c.conn, &message)
+	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			err = ctx.Err()
+		}
+		msgChan <- chanData{content: "", err: err}
+		return
+	}
+
+	log.Printf("message received: %v\n", message)
+
+	msgChan <- chanData{content: message, err: nil}
+}
+
+// sendMessageToClient is a method that sends a message to a client.
+func (c *client) sendMessageToClient(pastes []data.Paste) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	if len(pastes) == 0 {
+		return nil
+	}
+
+	err := wsjson.Write(ctx, c.conn, pastes)
+	if err != nil {
+		log.Printf("error writing message: %v\n", err)
+		return err
+	}
+	return nil
+}
