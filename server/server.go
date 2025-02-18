@@ -2,9 +2,11 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,23 +18,27 @@ import (
 // The subprotocol is a string that identifies the protocol that the server and client will use to communicate.
 const subprotocol = "pastytextProtocol"
 
+// The clientTimeout is the time that the server will wait for a message from the client.
+const clientTimeout = time.Minute * 5
+
 // ptServer is a struct that implements the http.Handler interface.
 type ptServer struct {
 	clients  map[*client]struct{}
-	serveMux http.ServeMux
 	dbm      *data.Manager
+	serveMux http.ServeMux
 }
 
 type client struct {
-	message      clientMessage
-	conn         *websocket.Conn
-	clientMutext sync.Mutex
+	message clientMessage
+	conn    *websocket.Conn
+	network string
 }
 
 type clientMessage struct {
-	User   string `json:"user"`
-	Action string `json:"action"`
-	Text   string `json:"text"`
+	User    string `json:"user"`
+	Action  string `json:"action"`
+	Text    string `json:"text"`
+	Network string `json:"network"`
 }
 
 type chanData struct {
@@ -46,13 +52,57 @@ func NewPtServer() (*ptServer, error) {
 		log.Fatalf("Failed to create data manager: %v\n", err)
 		return nil, err
 	}
-	return &ptServer{
+	pt := &ptServer{
 		clients: make(map[*client]struct{}),
 		dbm:     dbm,
-	}, nil
+	}
+
+	pt.serveMux.Handle("/", http.FileServer(http.Dir("./web")))
+	pt.serveMux.HandleFunc("/id", pt.idHandler)
+	pt.serveMux.HandleFunc("/ws", pt.joinHandler)
+
+	return pt, nil
 }
 
 func (p *ptServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	p.serveMux.ServeHTTP(w, r)
+}
+
+func (p *ptServer) getRequesstIP(r *http.Request) string {
+	requestIP := r.Header.Get("X-forwarded-for")
+	if requestIP == "" {
+		requestIP = r.RemoteAddr
+	}
+	return strings.Split(requestIP, ":")[0]
+}
+
+func (p *ptServer) idHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/josn")
+	idn := struct {
+		Friendly_name string `json:"friendly_name"`
+		IPaddress     string `json:"ipaddress"`
+	}{Friendly_name: data.GenerateName(), IPaddress: p.getRequesstIP(r)}
+
+	idJson, err := json.Marshal(idn)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Internal server error %s", err.Error()), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(idJson)
+}
+
+func (p *ptServer) joinHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 		InsecureSkipVerify: true, //TODO: This is insecure, but it's just an example
 		Subprotocols:       []string{subprotocol},
@@ -72,9 +122,10 @@ func (p *ptServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c := &client{
 		conn:    conn,
 		message: clientMessage{},
+		network: p.getRequesstIP(r),
 	}
-	p.clients[c] = struct{}{}
 
+	p.clients[c] = struct{}{}
 	p.joinClient(c)
 }
 
@@ -86,7 +137,7 @@ func (p *ptServer) joinClient(c *client) {
 
 	//Send initial message to client
 	go func() {
-		pastes, err := p.dbm.GetPastes()
+		pastes, err := p.dbm.GetPastes(c.network)
 		if err != nil {
 			sendErrMsgChan <- err
 		} else {
@@ -127,12 +178,19 @@ func (p *ptServer) joinClient(c *client) {
 			newClientMessage = chanResult.content.(clientMessage)
 		}
 
-		p.persistMessageFromClient(newClientMessage)
+		if newClientMessage.Action == "add" {
+			newClientMessage.Network = c.network
+			p.persistMessageFromClient(newClientMessage)
 
-		pastes, err := p.dbm.GetPastes()
-		if err == nil {
-			p.publishMessageToClients(pastes)
+			pastes, err := p.dbm.GetPastes(c.network)
+			if err == nil {
+				p.publishMessageToClients(pastes)
+			}
+		} else {
+			//The only other action is delete
+			// TODO: Implement delete
 		}
+
 	}
 }
 
@@ -141,6 +199,7 @@ func (p *ptServer) persistMessageFromClient(msg clientMessage) {
 	paste := data.Paste{
 		User:      msg.User,
 		Device:    "device",
+		Network:   msg.Network,
 		Content:   msg.Text,
 		CreatedAt: time.Now(),
 	}
@@ -152,8 +211,6 @@ func (p *ptServer) persistMessageFromClient(msg clientMessage) {
 
 // publishMessageToClients is a method that sends a message to all clients.
 func (p *ptServer) publishMessageToClients(pastes []data.Paste) {
-	//TODO: message will come from database
-
 	var wg sync.WaitGroup
 
 	for c := range p.clients {
@@ -171,7 +228,7 @@ func (p *ptServer) publishMessageToClients(pastes []data.Paste) {
 // readMessageFromClient is a method that reads messages from the client.
 // msgChan is a channel that will receive the message.
 func (c *client) readMessageFromClient(msgChan chan<- chanData) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	ctx, cancel := context.WithTimeout(context.Background(), clientTimeout)
 	defer cancel()
 
 	var message clientMessage
@@ -184,8 +241,6 @@ func (c *client) readMessageFromClient(msgChan chan<- chanData) {
 		msgChan <- chanData{content: "", err: err}
 		return
 	}
-
-	log.Printf("message received: %v\n", message)
 
 	msgChan <- chanData{content: message, err: nil}
 }

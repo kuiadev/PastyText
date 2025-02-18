@@ -26,3 +26,6 @@ go.work.sum
 
 # macOS DS_Store files
 .DS_Store
+
+# database files
+*.db

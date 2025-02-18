@@ -11,12 +11,13 @@ import (
 const create = `CREATE TABLE IF NOT EXISTS pastes (
 	id INTEGER NOT NULL PRIMARY KEY,
 	created_at DATETIME NOT NULL,
+	network TEXT,
 	user TEXT,
 	device TEXT,
 	content TEXT
 );`
 
-const dbfile string = "/var/pastytext/data/pastytext.db"
+const dbfile string = "pastytext.db"
 
 type Manager struct {
 	db *sql.DB
@@ -26,6 +27,7 @@ type Manager struct {
 type Paste struct {
 	Id        int64
 	CreatedAt time.Time
+	Network   string
 	User      string
 	Device    string
 	Content   string
@@ -50,7 +52,7 @@ func (m *Manager) Close() error {
 
 // InsertPaste inserts a paste into the database.
 func (m *Manager) InsertPaste(p Paste) (int64, error) {
-	res, err := m.db.Exec("INSERT INTO pastes (created_at, user, device, content) VALUES (?, ?, ?, ?)", p.CreatedAt, p.User, p.Device, p.Content)
+	res, err := m.db.Exec("INSERT INTO pastes (created_at, network, user, device, content) VALUES (?, ?, ?, ?, ?)", p.CreatedAt, p.Network, p.User, p.Device, p.Content)
 	if err != nil {
 		return 0, err
 	}
@@ -59,8 +61,8 @@ func (m *Manager) InsertPaste(p Paste) (int64, error) {
 }
 
 // GetPastes returns all pastes from the database.
-func (m *Manager) GetPastes() ([]Paste, error) {
-	rows, err := m.db.Query("SELECT id, created_at, user, device, content FROM pastes ORDER BY created_at DESC")
+func (m *Manager) GetPastes(network string) ([]Paste, error) {
+	rows, err := m.db.Query("SELECT id, created_at, network, user, device, content FROM pastes WHERE network = ? ORDER BY created_at DESC", network)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +71,7 @@ func (m *Manager) GetPastes() ([]Paste, error) {
 	var pastes []Paste
 	for rows.Next() {
 		var p Paste
-		if err := rows.Scan(&p.Id, &p.CreatedAt, &p.User, &p.Device, &p.Content); err != nil {
+		if err := rows.Scan(&p.Id, &p.CreatedAt, &p.Network, &p.User, &p.Device, &p.Content); err != nil {
 			return nil, err
 		}
 		pastes = append(pastes, p)
