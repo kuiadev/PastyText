@@ -68,7 +68,7 @@ func (p *ptServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p.serveMux.ServeHTTP(w, r)
 }
 
-func (p *ptServer) getRequesstIP(r *http.Request) string {
+func (p *ptServer) getRequestIP(r *http.Request) string {
 	requestIP := r.Header.Get("X-forwarded-for")
 	if requestIP == "" {
 		requestIP = r.RemoteAddr
@@ -86,7 +86,7 @@ func (p *ptServer) idHandler(w http.ResponseWriter, r *http.Request) {
 	idn := struct {
 		Friendly_name string `json:"friendly_name"`
 		IPaddress     string `json:"ipaddress"`
-	}{Friendly_name: data.GenerateName(), IPaddress: p.getRequesstIP(r)}
+	}{Friendly_name: data.GenerateName(), IPaddress: p.getRequestIP(r)}
 
 	idJson, err := json.Marshal(idn)
 	if err != nil {
@@ -122,7 +122,7 @@ func (p *ptServer) joinHandler(w http.ResponseWriter, r *http.Request) {
 	c := &client{
 		conn:    conn,
 		message: clientMessage{},
-		network: p.getRequesstIP(r),
+		network: p.getRequestIP(r),
 	}
 
 	p.clients[c] = struct{}{}
