@@ -113,20 +113,40 @@
         return withProtocol || withoutProtocol;
     },
     prettyDate(date) {
-      const pastTimestamp = new Date(date).getTime(); // Example past timestamp
-      const differenceInSeconds = Math.floor((pastTimestamp - this.now) / 1000);
-
-      const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto', style: 'short' });
-      console.log(rtf.format(differenceInSeconds, 'second')); // Example output: "in 27 days"
+      const pastTimestamp = new Date(date).getTime();
+      const differenceInSeconds = Math.floor((this.now - pastTimestamp) / 1000);
+      const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 
       let unit = 'second'
+      let diff = 0
       switch (true) {
+        case differenceInSeconds > 18144000:
+          unit = 'month'
+          diff = Math.floor(differenceInSeconds/30/7/24/60/60)
+          break
+        case differenceInSeconds > 604800:
+          unit = 'week'
+          diff = Math.floor(differenceInSeconds/7/24/60/60)
+          break
         case differenceInSeconds > 86400:
-        unit = 'day'
-
+          unit = 'day'
+          diff = Math.floor(differenceInSeconds/24/60/60)
+          break
+        case differenceInSeconds > 3600:
+          unit = 'hour'
+          diff = Math.floor(differenceInSeconds/60/60)
+          break
+        case differenceInSeconds > 60:
+          unit = 'minute'
+          diff = Math.floor(differenceInSeconds/60)
+          break
+        default:
+          unit = 'second'
+          diff = Math.floor(differenceInSeconds)
+          break
       }
 
-      return rtf.format(differenceInSeconds, unit)
+      return rtf.format(diff*-1, unit)
     }
     
       
