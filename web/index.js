@@ -1,69 +1,76 @@
 ;(() => {
-
-    let expectingMessage = false
-    let identity = ''
-    
     const { createApp } = Vue
     createApp({
       data(){
         return {
+          identity:'',
           pastes: '',
           now: Date.now()
         }
       },
+      computed:{
+        availablePastes(){
+          let cleanedPastes = []
+          Array.from(this.pastes).forEach(function(element) {
+            element.isShown = true;
+            cleanedPastes.push(element);
+          });
+          return cleanedPastes;
+        }
+      },
       methods: {
         dial() {
-          const conn = new WebSocket(`ws://${location.host}/ws`, `pastytextProtocol`)
+          const conn = new WebSocket(`ws://${location.host}/ws`, `pastytextProtocol`);
       
           conn.addEventListener('close', ev => {
-            console.log(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`, true)
+            console.log(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`, true);
             if (ev.code !== 1001) {
-              console.log('Reconnecting in 3s')
-              setTimeout(this.dial, 3000)
+              console.log('Reconnecting in 3s');
+              setTimeout(this.dial, 3000);
             }
           })
           conn.addEventListener('open', ev => {
-            console.info('websocket connected')
+            console.info('websocket connected');
           })
       
           // This is where we handle messages received.
           conn.addEventListener('message', ev => {
             if (typeof ev.data !== 'string') {
-              console.error('unexpected message type', typeof ev.data)
-              return
+              console.error('unexpected message type', typeof ev.data);
+              return;
             }
     
-            this.pastes = JSON.parse(ev.data)
+            this.pastes = JSON.parse(ev.data);
           })
     
           window.addEventListener('paste', (event) => {
-            const text = (event.clipboardData || window.clipboardData).getData('text')
+            const text = (event.clipboardData || window.clipboardData).getData('text');
             if (text) {
-              const msg = {"user": identity,
+              const msg = {"user": this.identity,
                 "action": "add", 
-                "text": text}
-              conn.send(JSON.stringify(msg))
+                "text": text};
+              conn.send(JSON.stringify(msg));
             }
           })
         },
         setIdentity() {
           if (localStorage.getItem('identity')) {
-              identity = localStorage.getItem('identity')
-              console.info("friendly name: ", identity)
-              return
+              this.identity = localStorage.getItem('identity');
+              console.info("friendly name: ", this.identity);
+              return;
           }
   
           fetch('/id')
             .then((response) => response.json())
             .then((data) => {
-                console.info("new friendly name: ", data.friendly_name)
+                console.info("new friendly name: ", data.friendly_name);
 
-                identity = data.friendly_name
-                localStorage.setItem("identity", identity)
-                localStorage.setItem("ipaddress", data.ipaddress)
+                this.identity = data.friendly_name
+                localStorage.setItem("identity", this.identity);
+                localStorage.setItem("ipaddress", data.ipaddress);
             })
             .catch((error) => {
-                console.error(error.message)
+                console.error(error.message);
             })
         },
         isPassword(text) {
@@ -117,43 +124,51 @@
       const differenceInSeconds = Math.floor((this.now - pastTimestamp) / 1000);
       const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 
-      let unit = 'second'
-      let diff = 0
+      let unit = 'second';
+      let diff = 0;
       switch (true) {
         case differenceInSeconds > 18144000:
-          unit = 'month'
-          diff = Math.floor(differenceInSeconds/30/7/24/60/60)
-          break
+          unit = 'month';
+          diff = Math.floor(differenceInSeconds/30/7/24/60/60);
+          break;
         case differenceInSeconds > 604800:
-          unit = 'week'
-          diff = Math.floor(differenceInSeconds/7/24/60/60)
-          break
+          unit = 'week';
+          diff = Math.floor(differenceInSeconds/7/24/60/60);
+          break;
         case differenceInSeconds > 86400:
-          unit = 'day'
-          diff = Math.floor(differenceInSeconds/24/60/60)
-          break
+          unit = 'day';
+          diff = Math.floor(differenceInSeconds/24/60/60);
+          break;
         case differenceInSeconds > 3600:
-          unit = 'hour'
-          diff = Math.floor(differenceInSeconds/60/60)
-          break
+          unit = 'hour';
+          diff = Math.floor(differenceInSeconds/60/60);
+          break;
         case differenceInSeconds > 60:
-          unit = 'minute'
-          diff = Math.floor(differenceInSeconds/60)
-          break
+          unit = 'minute';
+          diff = Math.floor(differenceInSeconds/60);
+          break;
         default:
-          unit = 'second'
-          diff = Math.floor(differenceInSeconds)
-          break
+          unit = 'second';
+          diff = Math.floor(differenceInSeconds);
+          break;
       }
 
-      return rtf.format(diff*-1, unit)
+      return rtf.format(diff*-1, unit);
+    },
+    async copyContent(valID, txt, vele) {
+      try {
+        await navigator.clipboard.writeText(txt);
+        this.$refs['copy_' + valID][0].textContent = "Copied!";
+        vele.isShown = false;
+      } catch (error) {
+        console.error(error.message);
+      }
     }
     
-      
       },
       mounted(){
-        this.setIdentity()
-        this.dial()
+        this.setIdentity();
+        this.dial();
       }
 
     }).mount('#app')
