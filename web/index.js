@@ -147,10 +147,12 @@
           unit = 'minute';
           diff = Math.floor(differenceInSeconds/60);
           break;
-        default:
+        case differenceInSeconds > 15:
           unit = 'second';
           diff = Math.floor(differenceInSeconds);
           break;
+        default:
+          return "Just now";
       }
 
       return rtf.format(diff*-1, unit);
