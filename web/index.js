@@ -80,9 +80,9 @@
           }
 
           // // Check if the text contains any spaces
-          // if (/\s/.test(text)) {
-          //   return false;
-          // }
+          if (/\s/.test(text)) {
+            return false;
+          }
       
           // Check if the text contains at least one lowercase letter
           if (!/[a-z]/.test(text)) {
