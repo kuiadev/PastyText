@@ -7,102 +7,172 @@
     <link href="/main.css" rel="stylesheet">
 
   </head>
-  <body class="mx-auto p-12 font-sans antialiased">
-    <div class="w-full space-y-4 p-12" id="app">
-      <ul role="list" class="w-full px-12">
-        <li v-for="value in availablePastes" class="flex justify-between gap-x-6 py-5">
-          <div class="w-full rounded-xl border-2 border-gray-100 bg-white mb-4">
-            <div class="flex justify-end" :title="value.CreatedAt">          
-              <strong
-                class="-me-[2px] -mb-[2px] inline-flex items-center gap-1 rounded-ss-xl rounded-ee-xl  px-3 py-1.5  text-gray-500"
-              >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-              </svg>
-                <span class="text-[10px] font-medium sm:text-xs"> {{prettyDate(value.CreatedAt) }}</span>
-              </strong>
+  <body class="bg-white dark:bg-gray-800 p-6 md:p-12 font-sans antialiased">
+    <div id="app">
+      <header>
+        <div class="mx-auto max-w-screen-xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+          <div class="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-center md:text-center">
+            <div>
+              <h1 class="text-2xl font-bold text-gray-700 dark:text-stone-200 sm:text-3xl">Paste text anywhere on this page!</h1>
+      
+              <p class="mt-1.5 text-sm text-gray-500 dark:text-gray-400">You are <strong>{{identity}}</strong> on this network ({{network}}).</p>
+              
             </div>
-            <div class="flex items-start gap-4 p-4 sm:p-6 lg:p-8">
-              <div v-if="isPassword(value.Content)">
-                <span class="text-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-14 rounded-lg object-cover shrink-0">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                  </svg>
-                </span>
-              </div>
-              <div v-else-if="isURL(value.Content)">
-                <span class="text-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-14 rounded-lg object-cover shrink-0">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
-                  </svg>
-                </span>
-              </div>
-              <div v-else>
-                <span class="text-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-14 rounded-lg object-cover shrink-0">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                  </svg>
-                </span>
-              </div>
-              <div>
-          
-                <div v-if="isURL(value.Content)">
-                  <a :href="value.Content" target="_blank">
-                    <p class="line-clamp-2 text-lg text-gray-700">
-                      {{value.Content}}
-                    </p>
-                  </a>
-                </div>
-                <div v-else>
-                  <p class="line-clamp-2 text-lg text-gray-700">
-                    {{value.Content}}
-                  </p>
+          </div>
+          <div class="text-center mt-3">
+            <button
+            class="cursor-pointer inline-block rounded-sm border border-cyan-600 px-12 py-3 text-sm font-medium text-cyan-600 hover:bg-cyan-600 hover:text-white focus:ring-3 focus:outline-hidden"
+            v-on:click="handlePaste()"
+          >
+            ...or click here to paste
+          </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="w-full space-y-4 md:p-12">
+        <ul role="list" class="w-full px-4 md:px-8">
+          <li v-for="value in availablePastes" class="flex justify-between gap-x-6 py-5">
+            <div class="w-full rounded-xl border-2 border-gray-100 bg-white dark:bg-gray-800 mb-4">
+
+              <div class="flex justify-end dark:text-stone-300" :title="value.CreatedAt">          
+                <strong
+                  class="-me-[2px] -mb-[2px] inline-flex items-center gap-1 rounded-ss-xl rounded-ee-xl  px-3 py-1.5 text-gray-500 dark:text-stone-300"
+                >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
                   
-                </div>
-                
-          
-                <div class="mt-2 sm:flex sm:items-center sm:gap-2">
-                  <div v-on:click="copyContent(value.Id, value.Content, value)" class="flex items-center gap-1 text-gray-500 cursor-pointer">
-    
-                    <svg v-show="value.isShown" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
-                    </svg>
-                    <svg v-show="!value.isShown" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="green" class="size-4">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                  <span class="text-[10px] font-medium sm:text-xs"> {{prettyDate(value.CreatedAt) }}</span>
+                </strong>
+
+                  <span v-show="value.isNew" class="inline-flex items-center justify-center rounded-full bg-cyan-600 m-2 px-2.5 py-0.5 text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="-ms-1 me-1.5 size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
                     </svg>
                     
-                    <p :ref="'copy_' + value.Id" class="text-xs">Copy</p>
+
+                    <p class="whitespace-nowrap text-sm">New</p>
+                  </span>
+              </div>
+              
+              <div class="flex items-start gap-4 p-4 sm:p-6 lg:p-8">
+                <div v-if="isPassword(value.Content)">
+                  <span class="text-gray-500 dark:text-stone-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 md:size-14 rounded-lg object-cover shrink-0">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                    </svg>
+                  </span>
+                </div>
+                <div v-else-if="isURL(value.Content)">
+                  <span class="text-gray-500 dark:text-stone-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 md:size-14 rounded-lg object-cover shrink-0">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
+                    </svg>
+                  </span>
+                </div>
+                <div v-else>
+                  <span class="text-gray-500 dark:text-stone-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 md:size-14 rounded-lg object-cover shrink-0">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                    </svg>
+                  </span>
+                </div>
+                <div>
+            
+                  <div v-if="isURL(value.Content)">
+                    <a :href="value.Content" target="_blank">
+                      <p class="line-clamp-2 text-ellipsis md:truncate text-base md:text-lg text-gray-700 dark:text-stone-300">
+                        {{value.Content}}
+                      </p>
+                    </a>
+                  </div>
+                  <div v-else>
+                    <p class="line-clamp-2 text-base md:text-lg text-gray-700 dark:text-stone-300">
+                      {{value.Content}}
+                    </p>
+                    
+                  </div>
+                  
+            
+                  <div class="mt-2 sm:flex sm:items-center sm:gap-2">
+                    <div v-on:click="copyContent(value.Id, value.Content, value)" class="flex items-center gap-1 text-gray-500 dark:text-stone-300 cursor-pointer">
+      
+                      <svg v-show="value.isShown" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+                      </svg>
+                      <svg v-show="!value.isShown" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="green" class="size-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                      </svg>
+                      
+                      <p :ref="'copy_' + value.Id" class="text-xs md:text-sm">Copy</p>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          
-            <div class="mb-3 pr-2 flex justify-end">
-              <div class="flex items-center gap-1 text-red-500">
-    
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                  <title>Delete</title>
-                  <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                </svg>
-                
+            
+              <div class="mb-3 pr-2 flex justify-end">
+                <div class="flex items-center gap-1 text-red-500 dark:text-red-400">
       
-                <p class="text-xs">Delete ({{value.Id}})</p>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                    <title>Delete</title>
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                  </svg>
+                  
+        
+                  <p class="text-xs md:text-sm">Delete ({{value.Id}})</p>
+                </div>
+              </div>
+              <div class="flex justify-end" title="Device name">
+                <strong
+                  class="-me-[2px] -mb-[2px] inline-flex items-center gap-1 rounded-ss-xl rounded-ee-xl  px-3 py-1.5 border-2 border-gray-100 text-gray-500 dark:text-stone-300"
+                >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                </svg>
+                  <span class="text-[10px] font-medium sm:text-xs">{{value.User}}</span>
+                </strong>
               </div>
             </div>
-            <div class="flex justify-end" title="Device name">
-              <strong
-                class="-me-[2px] -mb-[2px] inline-flex items-center gap-1 rounded-ss-xl rounded-ee-xl  px-3 py-1.5 border-2 border-gray-100 text-gray-500"
-              >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
-              </svg>
-                <span class="text-[10px] font-medium sm:text-xs">{{value.User}}</span>
-              </strong>
-            </div>
+          </li>
+        </ul>
+
+        <div v-show="showNewBanner" class="fixed inset-x-0 bottom-0 p-4">
+          <div
+            class="relative flex items-center justify-between gap-4 rounded-lg bg-cyan-600 px-4 py-3 text-white shadow-lg"
+          >
+          
+          <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="-ms-1 me-1.5 size-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+            </svg>
+            <p class="text-center text-sm font-semibold">
+              New paste shared!
+            </p>
           </div>
-        </li>
-      </ul>
+            
+        
+            <button v-on:click="hideNewBanner()"
+              aria-label="Close"
+              class="shrink-0 rounded-lg bg-black/10 p-1 transition hover:bg-black/20 cursor-pointer"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="size-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+      </div>
     </div>
     <script type="text/javascript" src="/vue.global.prod.js"></script>
     <script type="text/javascript" src="/index.js"></script>

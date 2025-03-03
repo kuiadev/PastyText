@@ -3,60 +3,104 @@
     createApp({
       data(){
         return {
+          conn: null,
           identity:'',
+          network: '',
+          lastPasteTime: 0,
           pastes: '',
-          now: Date.now()
+          now: Date.now(),
+          showNewBanner: false
         }
       },
       computed:{
         availablePastes(){
           let cleanedPastes = []
+          let latestPasteIdx = localStorage.getItem("latestPasteIdx");
+          if (latestPasteIdx === null) {
+            localStorage.setItem("latestPasteIdx", 0);
+            latestPasteIdx = 0;
+          }
           Array.from(this.pastes).forEach(function(element) {
+            if (element.Id > latestPasteIdx) {
+              element.isNew = true;
+            } else {
+              element.isNew = false;
+            }
+
             element.isShown = true;
             cleanedPastes.push(element);
           });
+
+          if (cleanedPastes.length > 0) {
+            localStorage.setItem("latestPasteIdx", cleanedPastes[0]["Id"]);
+          }
+          
           return cleanedPastes;
         }
       },
       methods: {
         dial() {
-          const conn = new WebSocket(`ws://${location.host}/ws`, `pastytextProtocol`);
+          this.conn = new WebSocket(`ws://${location.host}/ws`, `pastytextProtocol`);
       
-          conn.addEventListener('close', ev => {
+          this.conn.addEventListener('close', ev => {
             console.log(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`, true);
             if (ev.code !== 1001) {
               console.log('Reconnecting in 3s');
               setTimeout(this.dial, 3000);
             }
           })
-          conn.addEventListener('open', ev => {
+          this.conn.addEventListener('open', ev => {
             console.info('websocket connected');
           })
       
           // This is where we handle messages received.
-          conn.addEventListener('message', ev => {
+          this.conn.addEventListener('message', ev => {
             if (typeof ev.data !== 'string') {
               console.error('unexpected message type', typeof ev.data);
               return;
             }
     
             this.pastes = JSON.parse(ev.data);
+
+            if (this.lastPasteTime == 0 || ((Date.now() - this.lastPasteTime) / 1000) > 3) {
+              if (localStorage.getItem("latestPasteIdx") !== null && this.pastes[0].Id > localStorage.getItem("latestPasteIdx")) {
+                this.showNewBanner = true;
+              }
+            }
           })
     
           window.addEventListener('paste', (event) => {
-            const text = (event.clipboardData || window.clipboardData).getData('text');
-            if (text) {
-              const msg = {"user": this.identity,
-                "action": "add", 
-                "text": text};
-              conn.send(JSON.stringify(msg));
-            }
+            this.handlePaste();
           })
         },
+        handlePaste(){
+          // Prevent pasting if the last paste was less than 3 seconds ago
+          if (((Date.now() - this.lastPasteTime) / 1000) < 3) {
+            return;
+          }
+
+          let pastedText = '';
+          navigator.clipboard
+            .readText()
+            .then(clipText => {
+              pastedText = clipText;
+
+              if (pastedText) {
+                const msg = {"user": this.identity,
+                  "action": "add", 
+                  "text": pastedText};
+                this.conn.send(JSON.stringify(msg));
+                this.lastPasteTime = Date.now();
+              }
+            });
+        },
         setIdentity() {
+          if (localStorage.getItem('ipaddress')) {
+            this.network = localStorage.getItem('ipaddress');
+          }
+
           if (localStorage.getItem('identity')) {
               this.identity = localStorage.getItem('identity');
-              console.info("friendly name: ", this.identity);
               return;
           }
   
@@ -65,7 +109,8 @@
             .then((data) => {
                 console.info("new friendly name: ", data.friendly_name);
 
-                this.identity = data.friendly_name
+                this.identity = data.friendly_name;
+                this.network = data.ipaddress;
                 localStorage.setItem("identity", this.identity);
                 localStorage.setItem("ipaddress", data.ipaddress);
             })
@@ -133,7 +178,12 @@
           break;
         case differenceInSeconds > 604800:
           unit = 'week';
-          diff = Math.floor(differenceInSeconds/7/24/60/60);
+        // "last week" use case
+          if (differenceInSeconds < 691200){
+            diff = Math.floor(differenceInSeconds/7/24/60/60);
+          } else {
+            diff = Math.ceil(differenceInSeconds/7/24/60/60);
+          }
           break;
         case differenceInSeconds > 86400:
           unit = 'day';
@@ -165,6 +215,9 @@
       } catch (error) {
         console.error(error.message);
       }
+    },
+    hideNewBanner() {
+      this.showNewBanner = false;
     }
     
       },
