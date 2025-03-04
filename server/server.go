@@ -35,6 +35,7 @@ type client struct {
 }
 
 type clientMessage struct {
+	Id      int    `json:"id"`
 	User    string `json:"user"`
 	Action  string `json:"action"`
 	Text    string `json:"text"`
@@ -181,16 +182,15 @@ func (p *ptServer) joinClient(c *client) {
 		if newClientMessage.Action == "add" {
 			newClientMessage.Network = c.network
 			p.persistMessageFromClient(newClientMessage)
-
-			pastes, err := p.dbm.GetPastes(c.network)
-			if err == nil {
-				p.publishMessageToClients(pastes)
-			}
 		} else {
 			//The only other action is delete
-			// TODO: Implement delete
+			p.deletePaste(int64(newClientMessage.Id))
 		}
 
+		pastes, err := p.dbm.GetPastes(c.network)
+		if err == nil {
+			p.publishMessageToClients(pastes)
+		}
 	}
 }
 
@@ -206,6 +206,13 @@ func (p *ptServer) persistMessageFromClient(msg clientMessage) {
 	_, err := p.dbm.InsertPaste(paste)
 	if err != nil {
 		log.Printf("error inserting paste: %v\n", err)
+	}
+}
+
+func (p *ptServer) deletePaste(id int64) {
+	err := p.dbm.DeletePaste(id)
+	if err != nil {
+		log.Printf("error deleting paste: %v\n", err)
 	}
 }
 

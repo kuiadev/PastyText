@@ -9,7 +9,8 @@
           lastPasteTime: 0,
           pastes: '',
           now: Date.now(),
-          showNewBanner: false
+          showNewBanner: false,
+          showDeleteBanner: false
         }
       },
       computed:{
@@ -118,6 +119,13 @@
                 console.error(error.message);
             })
         },
+        deletePaste(pasteID) {
+          const msg = {"action": "delete", 
+            "id": pasteID};
+          this.conn.send(JSON.stringify(msg));
+
+          this.showDeleteBanner = true;
+        },
         isPassword(text) {
           // Check if the text has at least 8 characters
           if (text.length < 8) {
@@ -218,8 +226,10 @@
     },
     hideNewBanner() {
       this.showNewBanner = false;
+    },
+    hideDeleteBanner() {
+      this.showDeleteBanner = false;
     }
-    
       },
       mounted(){
         this.setIdentity();
