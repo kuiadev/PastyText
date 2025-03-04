@@ -10,7 +10,8 @@
           pastes: '',
           now: Date.now(),
           showNewBanner: false,
-          showDeleteBanner: false
+          showDeleteBanner: false,
+          showCopyBanner: false
         }
       },
       computed:{
@@ -66,6 +67,8 @@
             if (this.lastPasteTime == 0 || ((Date.now() - this.lastPasteTime) / 1000) > 3) {
               if (localStorage.getItem("latestPasteIdx") !== null && this.pastes[0].Id > localStorage.getItem("latestPasteIdx")) {
                 this.showNewBanner = true;
+                this.showCopyBanner = false;
+                this.showDeleteBanner = false;
               }
             }
           })
@@ -125,6 +128,8 @@
           this.conn.send(JSON.stringify(msg));
 
           this.showDeleteBanner = true;
+          this.showCopyBanner = false;
+          this.showNewBanner = false;
         },
         isPassword(text) {
           // Check if the text has at least 8 characters
@@ -220,12 +225,19 @@
         await navigator.clipboard.writeText(txt);
         this.$refs['copy_' + valID][0].textContent = "Copied!";
         vele.isShown = false;
+
+        this.showCopyBanner = true;
+        this.showDeleteBanner = false;
+        this.showNewBanner = false;
       } catch (error) {
         console.error(error.message);
       }
     },
     hideNewBanner() {
       this.showNewBanner = false;
+    },
+    hideCopyBanner() {
+      this.showCopyBanner = false;
     },
     hideDeleteBanner() {
       this.showDeleteBanner = false;
