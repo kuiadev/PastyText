@@ -11,7 +11,8 @@
           now: Date.now(),
           showNewBanner: false,
           showDeleteBanner: false,
-          showCopyBanner: false
+          showCopyBanner: false,
+          showDelayBanner: false
         }
       },
       computed:{
@@ -22,6 +23,12 @@
             localStorage.setItem("latestPasteIdx", 0);
             latestPasteIdx = 0;
           }
+
+          if (this.pastes === null || this.pastes.length === 0) {
+            localStorage.removeItem("latestPasteIdx");
+            return [];
+          }
+
           Array.from(this.pastes).forEach(function(element) {
             if (element.Id > latestPasteIdx) {
               element.isNew = true;
@@ -63,12 +70,16 @@
             }
     
             this.pastes = JSON.parse(ev.data);
+            if (this.pastes === null || this.pastes.length === 0) {
+              return;
+            }
 
             if (this.lastPasteTime == 0 || ((Date.now() - this.lastPasteTime) / 1000) > 3) {
               if (localStorage.getItem("latestPasteIdx") !== null && this.pastes[0].Id > localStorage.getItem("latestPasteIdx")) {
                 this.showNewBanner = true;
                 this.showCopyBanner = false;
                 this.showDeleteBanner = false;
+                this.showDelayBanner = false;
               }
             }
           })
@@ -80,8 +91,11 @@
         handlePaste(){
           // Prevent pasting if the last paste was less than 3 seconds ago
           if (((Date.now() - this.lastPasteTime) / 1000) < 3) {
+            this.showDelayBanner = true;
             return;
           }
+
+          this.showDelayBanner = false;
 
           let pastedText = '';
           navigator.clipboard
@@ -130,6 +144,7 @@
           this.showDeleteBanner = true;
           this.showCopyBanner = false;
           this.showNewBanner = false;
+          this.showDelayBanner = false;
         },
         isPassword(text) {
           // Check if the text has at least 8 characters
@@ -229,6 +244,7 @@
         this.showCopyBanner = true;
         this.showDeleteBanner = false;
         this.showNewBanner = false;
+        this.showDelayBanner = false;
       } catch (error) {
         console.error(error.message);
       }
@@ -241,6 +257,9 @@
     },
     hideDeleteBanner() {
       this.showDeleteBanner = false;
+    },
+    hideDelayBanner() {
+      this.showDelayBanner = false;
     }
       },
       mounted(){

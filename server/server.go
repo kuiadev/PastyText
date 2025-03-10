@@ -257,10 +257,6 @@ func (c *client) sendMessageToClient(pastes []data.Paste) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	if len(pastes) == 0 {
-		return nil
-	}
-
 	err := wsjson.Write(ctx, c.conn, pastes)
 	if err != nil {
 		log.Printf("error writing message: %v\n", err)
