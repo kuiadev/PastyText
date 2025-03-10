@@ -19,13 +19,8 @@
         availablePastes(){
           let cleanedPastes = []
           let latestPasteIdx = localStorage.getItem("latestPasteIdx");
-          if (latestPasteIdx === null) {
-            localStorage.setItem("latestPasteIdx", 0);
-            latestPasteIdx = 0;
-          }
 
-          if (this.pastes === null || this.pastes.length === 0) {
-            localStorage.removeItem("latestPasteIdx");
+          if (this.pastes === null) {
             return [];
           }
 
@@ -71,6 +66,8 @@
     
             this.pastes = JSON.parse(ev.data);
             if (this.pastes === null || this.pastes.length === 0) {
+              console.log('no pastes');
+              localStorage.removeItem("latestPasteIdx");
               return;
             }
 

@@ -13,6 +13,7 @@ import (
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
 	"github.com/kuiadev/pastytext/data"
+	"github.com/mileusna/useragent"
 )
 
 // The subprotocol is a string that identifies the protocol that the server and client will use to communicate.
@@ -32,6 +33,7 @@ type client struct {
 	message clientMessage
 	conn    *websocket.Conn
 	network string
+	device  string
 }
 
 type clientMessage struct {
@@ -40,6 +42,7 @@ type clientMessage struct {
 	Action  string `json:"action"`
 	Text    string `json:"text"`
 	Network string `json:"network"`
+	Device  string `json:"device"`
 }
 
 type chanData struct {
@@ -120,10 +123,12 @@ func (p *ptServer) joinHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ua := useragent.Parse(r.UserAgent())
 	c := &client{
 		conn:    conn,
 		message: clientMessage{},
 		network: p.getRequestIP(r),
+		device:  fmt.Sprintf("%s-%s", ua.OS, ua.Name),
 	}
 
 	p.clients[c] = struct{}{}
@@ -181,6 +186,7 @@ func (p *ptServer) joinClient(c *client) {
 
 		if newClientMessage.Action == "add" {
 			newClientMessage.Network = c.network
+			newClientMessage.Device = c.device
 			p.persistMessageFromClient(newClientMessage)
 		} else {
 			//The only other action is delete
@@ -198,7 +204,7 @@ func (p *ptServer) joinClient(c *client) {
 func (p *ptServer) persistMessageFromClient(msg clientMessage) {
 	paste := data.Paste{
 		User:      msg.User,
-		Device:    "device",
+		Device:    msg.Device,
 		Network:   msg.Network,
 		Content:   msg.Text,
 		CreatedAt: time.Now(),
