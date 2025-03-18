@@ -108,8 +108,7 @@ func (p *ptServer) joinHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		InsecureSkipVerify: true, //TODO: This is insecure, but it's just an example
-		Subprotocols:       []string{subprotocol},
+		Subprotocols: []string{subprotocol},
 	})
 	if err != nil {
 		log.Printf("%v\n", err)
@@ -153,13 +152,11 @@ func (p *ptServer) joinClient(c *client) {
 
 	}()
 
-	select {
-	case emsg := <-sendErrMsgChan:
-		if emsg != nil {
-			log.Printf("error sending initial message to client: %v\n", emsg)
-			c.conn.CloseNow()
-			delete(p.clients, c)
-		}
+	emsg := <-sendErrMsgChan
+	if emsg != nil {
+		log.Printf("error sending initial message to client: %v\n", emsg)
+		c.conn.CloseNow()
+		delete(p.clients, c)
 	}
 
 	//Read messages from client
@@ -169,20 +166,18 @@ func (p *ptServer) joinClient(c *client) {
 		go c.readMessageFromClient(readMsgChan)
 
 		var newClientMessage = clientMessage{}
-		select {
-		case chanResult := <-readMsgChan:
-			if chanResult.err != nil {
-				if chanResult.err != context.DeadlineExceeded {
-					log.Printf("error reading message from client: %v\n", chanResult.err)
-					c.conn.CloseNow()
-					delete(p.clients, c)
-					return
-				} else {
-					continue
-				}
+		chanResult := <-readMsgChan
+		if chanResult.err != nil {
+			if chanResult.err != context.DeadlineExceeded {
+				log.Printf("error reading message from client: %v\n", chanResult.err)
+				c.conn.CloseNow()
+				delete(p.clients, c)
+				return
+			} else {
+				continue
 			}
-			newClientMessage = chanResult.content.(clientMessage)
 		}
+		newClientMessage = chanResult.content.(clientMessage)
 
 		if newClientMessage.Action == "add" {
 			newClientMessage.Network = c.network
@@ -235,7 +230,6 @@ func (p *ptServer) publishMessageToClients(pastes []data.Paste) {
 	}
 
 	wg.Wait()
-	log.Println("Message sent to all clients")
 }
 
 // readMessageFromClient is a method that reads messages from the client.

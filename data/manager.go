@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"os"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -17,7 +18,7 @@ const create = `CREATE TABLE IF NOT EXISTS pastes (
 	content TEXT
 );`
 
-const dbfile string = "pastytext.db"
+const defaultDbFile string = "pastytext.db"
 
 type Manager struct {
 	db *sql.DB
@@ -34,7 +35,12 @@ type Paste struct {
 }
 
 func NewManager() (*Manager, error) {
-	db, err := sql.Open("sqlite3", dbfile)
+	dbFile := os.Getenv("DB_FILE")
+	if dbFile == "" {
+		dbFile = defaultDbFile
+	}
+
+	db, err := sql.Open("sqlite3", dbFile)
 	if err != nil {
 		return nil, err
 	}
