@@ -108,6 +108,44 @@ func TestGetPastes(t *testing.T) {
 	}
 }
 
+func TestDeletePaste(t *testing.T) {
+	setupTest()
+	defer teardownTest()
+
+	manager, err := NewManager()
+	defer manager.db.Close()
+	if err != nil {
+		t.Errorf("Failed to create new Manager: %v", err)
+	}
+
+	paste := Paste{
+		User:      "test User",
+		Device:    "test-device",
+		Network:   "test-network",
+		Content:   "TestDeletePaste",
+		CreatedAt: time.Now(),
+	}
+
+	_, err = manager.InsertPaste(paste)
+	if err != nil {
+		t.Errorf("Failed to insert new paste: %v", err)
+	}
+
+	err = manager.DeletePaste(1)
+	if err != nil {
+		t.Errorf("Failed to delete paste: %v", err)
+	}
+
+	pastes, err := manager.GetPastes("test-network")
+	if err != nil {
+		t.Errorf("Failed to fetch pastes: %v", err)
+	}
+
+	if len(pastes) > 0 {
+		t.Errorf("Expected pastes to be empty contains %v records", len(pastes))
+	}
+}
+
 func setupTest() {
 	os.Setenv("DB_FILE", testDbFile)
 }

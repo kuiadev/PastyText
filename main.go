@@ -12,14 +12,16 @@ import (
 )
 
 func main() {
-	startServer()
-}
-
-func startServer() {
-	pts, err := server.NewPtServer()
+	err := startServer()
 	if err != nil {
 		log.Fatalf("Failed to create server: %v\n", err)
-		return
+	}
+}
+
+func startServer() error {
+	pts, err := server.NewPtServer()
+	if err != nil {
+		return err
 	}
 
 	server := &http.Server{
@@ -47,8 +49,5 @@ func startServer() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 
-	err = server.Shutdown(ctx)
-	if err != nil {
-		log.Fatalf("Shutdown: %v\n", err)
-	}
+	return server.Shutdown(ctx)
 }

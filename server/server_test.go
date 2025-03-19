@@ -195,7 +195,7 @@ func TestPasteDeletion(t *testing.T) {
 	var pasteResp data.Paste = data.Paste{}
 	// The first iteration would be empty because the db contained no data, so we need to read twice
 	for i := range 3 {
-		go func(readMsgChan chan<- chanData) {
+		go func(msgChan chan<- chanData) {
 			var message []data.Paste
 			err = wsjson.Read(ctx, c, &message)
 
@@ -203,10 +203,10 @@ func TestPasteDeletion(t *testing.T) {
 				if ctx.Err() == context.DeadlineExceeded {
 					err = ctx.Err()
 				}
-				readMsgChan <- chanData{content: "", err: err}
+				msgChan <- chanData{content: "", err: err}
 				return
 			}
-			readMsgChan <- chanData{content: message, err: nil}
+			msgChan <- chanData{content: message, err: nil}
 
 		}(readMsgChan)
 
