@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apk add gcc musl-dev
 
 #Copy go modules
-COPY go.mod . 
+COPY go.mod .
 COPY go.sum .
 
 # Download go modules

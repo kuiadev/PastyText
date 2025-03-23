@@ -44,7 +44,7 @@
       },
       methods: {
         dial() {
-          this.conn = new WebSocket(`ws://${location.host}/ws`, `pastytextProtocol`);
+          this.conn = new WebSocket(`wss://${location.host}/ws`, `pastytextProtocol`);
       
           this.conn.addEventListener('close', ev => {
             console.log(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`, true);
