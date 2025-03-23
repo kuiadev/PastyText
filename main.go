@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,11 +31,16 @@ func startServer() error {
 		WriteTimeout: time.Second * 10,
 	}
 
-	log.Println("Server started")
+	l, err := net.Listen("tcp", ":8080")
+	if err != nil {
+		return err
+	}
+
+	log.Printf("listening on ws://%v", l.Addr())
 
 	errc := make(chan error, 1)
 	go func() {
-		errc <- server.ListenAndServe()
+		errc <- server.Serve(l)
 	}()
 
 	sigs := make(chan os.Signal, 1)
