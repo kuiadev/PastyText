@@ -49,6 +49,7 @@
           this.conn.addEventListener('close', ev => {
             console.log(`WebSocket Disconnected code: ${ev.code}, reason: ${ev.reason}`, true);
             if (ev.code !== 1001) {
+              window.removeEventListener('paste', this.handlePaste)
               console.log('Reconnecting in 3s');
               setTimeout(this.dial, 3000);
             }
@@ -81,9 +82,7 @@
             }
           })
     
-          window.addEventListener('paste', (event) => {
-            this.handlePaste();
-          })
+          window.addEventListener('paste', this.handlePaste);
         },
         handlePaste(){
           // Prevent pasting if the last paste was less than 3 seconds ago
