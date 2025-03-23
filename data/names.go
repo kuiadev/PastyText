@@ -32,7 +32,7 @@ var nouns = []string{
 	"rock", "snow", "turtle", "vulture", "waterfall", "xenon", "yarn", "zinnia", "acorn", "bottle",
 	"candle", "diamond", "eggplant", "feather", "gravel", "halo", "inbox", "necklace", "keychain",
 	"leash", "mushroom", "net", "octopus", "piano", "quiver", "ring", "stone", "tea", "underwear",
-	"vase", "wood", "xenophobia", "yogurt", "zenith", "albatross", "bee", "clover", "duck", "rat",
+	"vase", "wood", "pumpkin", "yogurt", "zenith", "albatross", "bee", "clover", "duck", "rat",
 	"fern", "goose", "hummingbird", "ivory", "jaguar", "koala", "lily", "maple", "nut", "olive",
 	"pear", "quince", "rooster", "seahorse", "toucan", "violet", "wombat", "mouse", "yak",
 	"rose",
