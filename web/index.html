@@ -10,7 +10,7 @@
 
   </head>
   <body class="bg-zinc-100 dark:bg-gray-900 font-sans antialiased">
-    <div id="app" v-cloak>
+    <div id="app">
       <header class="bg-gray-800 text-gray-300 dark:text-stone-200">
         <div class="mx-auto flex h-16 max-w-screen-xl items-center gap-2 px-4 sm:px-6 lg:px-8">
           <a class="block text-cyan-600" href="#">
@@ -24,7 +24,7 @@
             <div>
               <h1 class="text-2xl font-bold text-gray-300 dark:text-stone-200 sm:text-3xl">Paste text anywhere on this page!</h1>
       
-              <p class="mt-1.5 text-sm text-gray-400 dark:text-gray-400">You are <strong>{{identity}}</strong> on this network ({{network}}).</p>
+              <p class="mt-1.5 text-sm text-gray-400 dark:text-gray-400" v-cloak>You are <strong>{{identity}}</strong> on this network ({{network}}).</p>
               
             </div>
           </div>
@@ -41,7 +41,7 @@
       <div class="px-6 md:px-12">
         <div class="w-full space-y-4 md:p-12">
           <ul role="list" class="w-full px-4 md:px-8">
-            <li v-for="value in availablePastes" class="flex justify-between gap-x-6 py-5">
+            <li v-cloak v-for="value in availablePastes" class="flex justify-between gap-x-6 py-5">
               <div class="w-full rounded-xl border-2 border-zinc-200 bg-zinc-50 dark:bg-gray-800 dark:border-gray-700 mb-4">
 
                 <div class="flex justify-end dark:text-stone-300" :title="value.CreatedAt">          
@@ -146,7 +146,7 @@
             </li>
           </ul>
 
-          <div v-show="showNewBanner" class="fixed inset-x-0 bottom-0 p-4">
+          <div v-cloak v-show="showNewBanner" class="fixed inset-x-0 bottom-0 p-4">
             <div
               class="relative flex items-center justify-between gap-4 rounded-lg bg-cyan-600 px-4 py-3 text-white shadow-lg"
             >
@@ -179,7 +179,7 @@
             </div>
           </div>
 
-          <div v-show="showCopyBanner" class="fixed inset-x-0 bottom-0 p-4">
+          <div v-cloak v-show="showCopyBanner" class="fixed inset-x-0 bottom-0 p-4">
             <div
               class="relative flex items-center justify-between gap-4 rounded-lg bg-green-600 px-4 py-3 text-white shadow-lg"
             >
@@ -213,7 +213,7 @@
             </div>
           </div>
 
-          <div v-show="showDelayBanner" class="fixed inset-x-0 bottom-0 p-4">
+          <div v-cloak v-show="showDelayBanner" class="fixed inset-x-0 bottom-0 p-4">
             <div
               class="relative flex items-center justify-between gap-4 rounded-lg bg-amber-600 px-4 py-3 text-white shadow-lg"
             >
@@ -247,7 +247,7 @@
             </div>
           </div>
 
-          <div v-show="showDeleteBanner" class="fixed inset-x-0 bottom-0 p-4">
+          <div v-cloak v-show="showDeleteBanner" class="fixed inset-x-0 bottom-0 p-4">
             <div
               class="relative flex items-center justify-between gap-4 rounded-lg bg-red-500 px-4 py-3 text-white shadow-lg"
             >
