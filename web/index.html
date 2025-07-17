@@ -92,13 +92,13 @@
               
                     <div v-if="isURL(value.Content)">
                       <a :href="value.Content" target="_blank">
-                        <p class="line-clamp-2 text-ellipsis md:truncate text-base md:text-lg text-gray-700 dark:text-stone-300">
+                        <p class="line-clamp-3 break-all text-ellipsis md:truncate text-base md:text-lg text-gray-700 dark:text-stone-300">
                           {{value.Content}}
                         </p>
                       </a>
                     </div>
                     <div v-else>
-                      <p class="line-clamp-2 text-base md:text-lg text-gray-700 dark:text-stone-300">
+                      <p class="line-clamp-3 break-all text-base md:text-lg text-gray-700 dark:text-stone-300">
                         {{value.Content}}
                       </p>
                       
