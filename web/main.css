@@ -626,11 +626,6 @@
       line-height: var(--tw-leading, var(--text-xs--line-height));
     }
   }
-  .sm\:break-all {
-    @media (width >= 40rem) {
-      word-break: break-all;
-    }
-  }
   .md\:size-14 {
     @media (width >= 48rem) {
       width: calc(var(--spacing) * 14);
@@ -650,13 +645,6 @@
   .md\:justify-center {
     @media (width >= 48rem) {
       justify-content: center;
-    }
-  }
-  .md\:truncate {
-    @media (width >= 48rem) {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
   }
   .md\:p-12 {
