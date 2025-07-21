@@ -115,18 +115,20 @@
 
           if (localStorage.getItem('identity')) {
               this.identity = localStorage.getItem('identity');
-              return;
           }
   
           fetch('/id')
             .then((response) => response.json())
             .then((data) => {
+
+              if (this.network != data.ipaddress){
                 console.info("new friendly name: ", data.friendly_name);
 
                 this.identity = data.friendly_name;
                 this.network = data.ipaddress;
                 localStorage.setItem("identity", this.identity);
-                localStorage.setItem("ipaddress", data.ipaddress);
+                localStorage.setItem("ipaddress", this.network);
+              }
             })
             .catch((error) => {
                 console.error(error.message);
