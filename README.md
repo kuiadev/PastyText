@@ -105,4 +105,3 @@ The text persists as long as the SQLite storage remains. If you’re using Docke
 
 Currently, PastyText only supports text sharing. However, future updates may include support for additional formats.
 
----
