@@ -2,6 +2,8 @@
 
 PastyText is an open-source tool designed to make sharing text between devices on the same network easy and efficient. 
 
+[![Go](https://github.com/kuiadev/PastyText/actions/workflows/go.yml/badge.svg)](https://github.com/kuiadev/PastyText/actions/workflows/go.yml)
+
 ### Overview
 1. [Installation](#installation)
 2. [Features](#features)
