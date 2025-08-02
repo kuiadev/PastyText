@@ -2,11 +2,11 @@
 
 PastyText is an open-source tool designed to make sharing text between devices on the same network easy and efficient. 
 
-### Table of Contents
-1. [📥 Installation](#installation)
-2. [🚀 Features](#features)
-3. [🛠️ Use Cases](#usecases)
-4. [❓ FAQs](#faqs)
+### Overview
+1. [Installation](#installation)
+2. [Features](#features)
+3. [Use Cases](#usecases)
+4. [FAQs](#faqs)
 
 ---
 ## 📥 Installation <a name="installation"></a>
@@ -19,7 +19,7 @@ These instructions assume the usage of Caddy, but you could use whatever reverse
     
 2. In this folder, also create a file named Caddyfile with the following content
     
-    ```json
+    ```yaml
     127.0.0.1:80 {
         reverse_proxy pastytext:8080
     }
@@ -27,7 +27,7 @@ These instructions assume the usage of Caddy, but you could use whatever reverse
     
     1. If you’re hosting this on the web and want to take advantage of HTTPS, your Caddyfile can instead look like the following (replace “example.com” with your domain or subdomain). [Be sure](https://caddyserver.com/docs/quick-starts/https) to update your domain’s A/AAAA records in your DNS provider to point to your server.
         
-        ```json
+        ```yaml
         example.com {
             reverse_proxy pastytext:8080
         }
