@@ -17,9 +17,33 @@ PastyText is an open-source tool designed to make sharing text between devices o
 
 These instructions assume the usage of Caddy, but you could use whatever reverse proxy server that suits your needs.
 
-1. Copy the compose.yaml file from the PastyText source code to a new folder
+1. Copy contents below to a new file named `compose.yaml` and save it into a new folder
+
+    ```yaml
+    services:
+        pastytext:
+            image: kuia/pastytext:${PT_VERSION}
+            ports:
+            - "8080"
+        caddy:
+            image: caddy:2.10.0
+            restart: unless-stopped
+            ports:
+            - "80:80"
+            - "443:443"
+            - "2019:2019"
+            volumes:
+            - ./:/etc/caddy
+            - ./site:/srv
+            - caddy_data:/data
+            - caddy_config:/config
+
+    volumes:
+        caddy_data:
+        caddy_config:
+    ```
     
-2. In this folder, also create a file named Caddyfile with the following content
+2. In this folder, also create a file named `Caddyfile` with the following content
     
     ```yaml
     127.0.0.1:80 {
@@ -27,7 +51,7 @@ These instructions assume the usage of Caddy, but you could use whatever reverse
     }
     ```
     
-    1. If you’re hosting this on the web and want to take advantage of HTTPS, your Caddyfile can instead look like the following (replace “example.com” with your domain or subdomain). [Be sure](https://caddyserver.com/docs/quick-starts/https) to update your domain’s A/AAAA records in your DNS provider to point to your server.
+    * If you’re hosting PasatyText on the web and want to take advantage of HTTPS, your Caddyfile can instead look like the following (replace “example.com” with your domain or subdomain). [Be sure](https://caddyserver.com/docs/quick-starts/https) to update your domain’s A/AAAA records in your DNS provider to point to your server.
         
         ```yaml
         example.com {
