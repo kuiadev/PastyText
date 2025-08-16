@@ -25,6 +25,8 @@ These instructions assume the usage of Caddy, but you could use whatever reverse
             image: kuia/pastytext:${PT_VERSION}
             ports:
             - "8080"
+            volumes:
+            - db_data:/dbdata
         caddy:
             image: caddy:2.10.0
             restart: unless-stopped
@@ -41,6 +43,7 @@ These instructions assume the usage of Caddy, but you could use whatever reverse
     volumes:
         caddy_data:
         caddy_config:
+        db_data:
     ```
     
 2. In this folder, also create a file named `Caddyfile` with the following content
