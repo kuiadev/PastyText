@@ -18,7 +18,7 @@ const create = `CREATE TABLE IF NOT EXISTS pastes (
 	content TEXT
 );`
 
-const defaultDbFile string = "dbdata/pastytext.db"
+const defaultDbFile string = "../dbdata/pastytext.db"
 
 type Manager struct {
 	db *sql.DB
@@ -39,7 +39,7 @@ func NewManager() (*Manager, error) {
 	if dbFile == "" {
 		dbFile = defaultDbFile
 
-		err := os.Mkdir("dbdata", 0750)
+		err := os.Mkdir("../dbdata", 0750)
 		if err != nil && !os.IsExist(err) {
 			return nil, err
 		}
