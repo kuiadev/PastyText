@@ -3,6 +3,8 @@ services:
     image: pastytext:latest
     ports:
       - "8080"
+    volumes:
+      - db_data:/dbdata
   caddy:
     image: caddy:2.10.0
     restart: unless-stopped
@@ -19,3 +21,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  db_data:
