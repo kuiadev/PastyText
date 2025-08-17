@@ -5,10 +5,15 @@ PastyText is an open-source tool designed to make sharing text between devices o
 [![Go](https://github.com/kuiadev/PastyText/actions/workflows/go.yml/badge.svg)](https://github.com/kuiadev/PastyText/actions/workflows/go.yml)
 
 ### Overview
-1. [Installation](#installation)
-2. [Features](#features)
-3. [Use Cases](#usecases)
-4. [FAQs](#faqs)
+1. [Live Demo](#demo)
+2. [Installation](#installation)
+3. [Features](#features)
+4. [Use Cases](#usecases)
+5. [FAQs](#faqs)
+
+---
+## 🎬 Live Demo <a name="demo"></a>
+Check out the live demo (note: data is hourly): [PastyText live demo](https://pastytext.com)
 
 ---
 ## 📥 Installation <a name="installation"></a>
@@ -92,7 +97,7 @@ You may need to update the `dial()` function in the index.js file by replacing `
 
 | Feature | Description |
 | --- | --- |
-| **Easy Text Sharing** | Share text snippets with anyone on the same network through a self-hosted page (e.g., [pastytext.example.com](http://pastytext.example.com/)). |
+| **Easy Text Sharing** | Share text snippets with anyone on the same network through a self-hosted page (e.g., [pastytext.com](https://pastytext.com/)). |
 | **Real-Time Updates** | The shared page updates automatically to show new pastes without needing to refresh. New pastes are marked until the page is refreshed or a newer paste is added. |
 | **Device Identification** | Automatically assigns unique names to devices on the network (e.g., tasty-wombat) for easy identification of who shared what. |
 | **Individual Snippet Management** | Each pasted snippet can be copied or deleted individually, with timestamps indicating when they were shared. |
